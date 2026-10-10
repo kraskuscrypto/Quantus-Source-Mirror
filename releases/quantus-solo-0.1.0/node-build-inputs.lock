@@ -1,0 +1,72 @@
+{
+  "component": "quantus-solo-node",
+  "policy": "Build quantus-node from pinned upstream source; never ship the unsigned upstream release binary (owner decision B-1, 2026-10-02).",
+  "upstream": {
+    "repository": "https://github.com/Quantus-Network/chain",
+    "tag": "v1.0.2-Qm",
+    "commit": "482c5b9e02bec0adc70797eade0a67f60baf2619",
+    "version_string": "quantus-node 1.0.2-Qm-482c5b9e02b",
+    "build_command": "cargo build --locked --release --package quantus-node --target x86_64-unknown-linux-gnu",
+    "rust_toolchain": "1.93.0 (chain rust-toolchain file; targets wasm32v1-none)",
+    "lockfile": "Cargo.lock at the pinned commit (736 linked crates for x86_64 Linux, Phase 1 audit)"
+  },
+  "base_images": {
+    "builder": "rust:1.93.0-bookworm@sha256:d0a4aa3ca2e1088ac0c81690914a0d810f2eee188197034edf366ed010a2b382",
+    "runtime": "python:3.13-slim@sha256:7c61056e61ac89e852de05f3dc6fa51a6dd2181797bceed46aa725dd7cb2cd3b"
+  },
+  "builder_apt_packages": [
+    "clang",
+    "libclang-dev",
+    "protobuf-compiler",
+    "git",
+    "ca-certificates"
+  ],
+  "not_yet_pinned": [
+    "builder apt package versions are recorded in build-info.txt (clang 14.0.6, protoc 3.21.12, gcc 12.2.0) but not pinned in the Dockerfile"
+  ],
+  "reference_upstream_binary_for_comparison_only": {
+    "asset": "quantus-node-v1.0.2-Qm-x86_64-unknown-linux-gnu.tar.gz",
+    "sha256": "c0fb354772f4637c6db3a5e701ae8c4a6fc44c5414a38f1a95b91bc13b1e9063",
+    "note": "Unsigned; used only to compare --version and build-spec output with the Kraskus build. Never shipped."
+  },
+  "first_build": {
+    "date": "2026-10-02",
+    "builder_host": "workstation Docker engine (WSL2 VM 8 vCPU/7.9 GB), legacy builder limits --memory 6g --memory-swap 9g --cpuset-cpus 0-5, CARGO_BUILD_JOBS=4",
+    "attempts": [
+      {
+        "started": "2026-10-02T21:27:20Z",
+        "result": "failed: clang-sys could not find libclang.so (fixed by LIBCLANG_PATH, commit 2e3a893)"
+      },
+      {
+        "started": "2026-10-02T21:36:03Z",
+        "finished": "2026-10-02T22:07:30Z",
+        "result": "success",
+        "duration_minutes": 31
+      }
+    ],
+    "dockerfile_revision": "2e3a89351f97f00df09c2a5f1b17b722da4b15b9",
+    "source_commit": "482c5b9e02bec0adc70797eade0a67f60baf2619",
+    "toolchain": {
+      "rustc": "1.93.0 (254b59607 2026-01-19), LLVM 21.1.8",
+      "cargo": "1.93.0 (083ac5135 2025-12-15)",
+      "clang": "Debian clang 14.0.6",
+      "protoc": "libprotoc 3.21.12",
+      "gcc": "Debian 12.2.0-14+deb12u1",
+      "libclang_path": "/usr/lib/llvm-14/lib"
+    },
+    "binary": {
+      "path": "/usr/local/bin/quantus-node",
+      "version": "quantus-node 1.0.2-Qm-482c5b9e02b",
+      "sha256": "e40fdcf0613afa5b712c2a6f2a3d329be1ca15fbfc446f3f4080b5c9ca99fefd"
+    },
+    "image": {
+      "tag": "kraskus-dev/quantus-solo-node:0.1.0",
+      "image_id": "sha256:048b30d951501c8d65cc439f45e40d2166f44c58e4dcd21158f427470f31d888",
+      "size_bytes": 71960983,
+      "registry_digest": null,
+      "note": "local only; a registry digest exists only after push, which is not authorized yet"
+    },
+    "verification": "scripts/verify-node-image.sh: 11/11 PASS (node/build-evidence/verify-2026-10-02.txt); mainnet raw chain spec sha256 da13fff3998edec5c31782c6b8915a989c825b0b21f55ee9214324e0dba6b46e identical to the upstream release binary's",
+    "differs_from_upstream_binary": "yes (expected: non-reproducible build); upstream release sha256 of the tarball c0fb3547...9063, extracted binary 7df6ccd8...9778; behaviour checked by version, chain spec and a live mainnet sync"
+  }
+}
