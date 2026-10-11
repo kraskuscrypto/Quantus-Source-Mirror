@@ -1,0 +1,37 @@
+option-ext	0.2.0	MPL-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+qp-rusty-crystals-dilithium	4.1.1	GPL-3.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+qp-rusty-crystals-hdwallet	4.1.1	GPL-3.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+qpow-math	0.1.0	None	workspace/path: qpow-math	license_file=None	proc_macro=False	workspace=True
+sc-basic-authorship	0.53.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-block-builder	0.48.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-chain-spec	48.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-chain-spec-derive	12.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=True	workspace=False
+sc-cli	0.57.0	GPL-3.0-or-later WITH Classpath-exception-2.0	workspace/path: client/cli	license_file=None	proc_macro=False	workspace=True
+sc-client-api	44.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-client-db	0.51.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-consensus	0.54.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-executor	0.47.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-executor-common	0.43.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-executor-polkavm	0.40.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-executor-wasmtime	0.43.0	GPL-3.0-or-later WITH Classpath-exception-2.0	workspace/path: client/executor-wasmtime	license_file=None	proc_macro=False	workspace=True
+sc-informant	0.54.0	GPL-3.0-or-later WITH Classpath-exception-2.0	workspace/path: client/informant	license_file=None	proc_macro=False	workspace=True
+sc-keystore	39.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-mixnet	0.25.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-network	0.55.1	GPL-3.0-or-later WITH Classpath-exception-2.0	workspace/path: client/network	license_file=None	proc_macro=False	workspace=True
+sc-network-common	0.52.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-network-sync	0.54.0	GPL-3.0-or-later WITH Classpath-exception-2.0	workspace/path: client/network-sync	license_file=None	proc_macro=False	workspace=True
+sc-network-transactions	0.54.0	GPL-3.0-or-later WITH Classpath-exception-2.0	workspace/path: client/network-transactions	license_file=None	proc_macro=False	workspace=True
+sc-network-types	0.20.3	GPL-3.0-or-later WITH Classpath-exception-2.0	workspace/path: client/network-types	license_file=None	proc_macro=False	workspace=True
+sc-offchain	50.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-proposer-metrics	0.20.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-rpc	50.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-rpc-api	0.54.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-rpc-server	27.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-rpc-spec-v2	0.55.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-service	0.56.0	GPL-3.0-or-later WITH Classpath-exception-2.0	workspace/path: client/service	license_file=None	proc_macro=False	workspace=True
+sc-state-db	0.41.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-sysinfo	46.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-telemetry	30.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	workspace/path: client/telemetry	license_file=None	proc_macro=False	workspace=True
+sc-tracing	44.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False
+sc-transaction-pool	44.1.0	GPL-3.0-or-later WITH Classpath-exception-2.0	workspace/path: client/transaction-pool	license_file=None	proc_macro=False	workspace=True
+sc-transaction-pool-api	43.0.0	GPL-3.0-or-later WITH Classpath-exception-2.0	registry+https://github.com/rust-lang/crates.io-index	license_file=None	proc_macro=False	workspace=False

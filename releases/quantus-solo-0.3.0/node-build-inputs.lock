@@ -1,0 +1,146 @@
+{
+  "component": "quantus-solo-node",
+  "policy": "Build quantus-node from pinned upstream source plus the disclosed Kraskus developer-fee patch; never ship the unsigned upstream release binary (owner decision B-1, 2026-10-02; dev fee Option N + build.rs Option A, owner decisions 2026-10-10).",
+  "upstream": {
+    "repository": "https://github.com/Quantus-Network/chain",
+    "tag": "v1.0.2-Qm",
+    "commit": "482c5b9e02bec0adc70797eade0a67f60baf2619",
+    "version_string_unmodified": "quantus-node 1.0.2-Qm-482c5b9e02b",
+    "rust_toolchain": "1.93.0 (chain rust-toolchain file; targets wasm32v1-none)",
+    "lockfile": "Cargo.lock at the pinned commit (736 linked crates for x86_64 Linux, Phase 1 audit)",
+    "source_archive": {
+      "name": "quantus-chain-v1.0.2-Qm-482c5b9e-source.tar.gz",
+      "sha256": "f6d385ffcb3cb696588ddc778b8844d6b1fd8046331b38de2871f935385c4415"
+    },
+    "vendor_archive": {
+      "name": "quantus-chain-v1.0.2-Qm-482c5b9e-cargo-vendor.tar.gz",
+      "sha256": "ade776f62a32fbe0e95a1d97588b4cbc7f447f23ae3937d6ec49f1eeb79769fb"
+    }
+  },
+  "kraskus_patch": {
+    "file": "node/patches/0001-kraskus-dev-fee.patch",
+    "sha256": "82cc16c192a92e895c1480afda15e645d8b29898a7d4d5443ff32fdaf1a68b8a",
+    "base_commit": "482c5b9e02bec0adc70797eade0a67f60baf2619",
+    "files_changed": [
+      "client/consensus/qpow/src/lib.rs",
+      "node/build.rs"
+    ],
+    "diff_stat": "2 files changed, 211 insertions(+), 6 deletions(-)",
+    "lib_rs": "KRASKUS_DEV_FEE_PERIOD = 100, KRASKUS_DEV_FEE_INNER_HASH (developer inner hash bytes), kraskus_rewards_preimage_for_height(); create_block_template uses the developer inner hash when (parent + 1) % 100 == 0 and logs 'Kraskus dev-fee template selected for height N' (info, target pow); 4 unit tests (kraskus_dev_fee_*)",
+    "build_rs": "sanitize_git_commit_hash_override() also accepts <hex 1..=64>-kraskus-devfee<digits>; upstream hex-only values (including empty) unchanged; anything else still becomes 'unknown'; main() and the build-script crate import are cfg(not(test)) so `rustc --test node/build.rs` runs 7 sanitizer tests",
+    "kraskus_tests": [
+      "rustc --edition 2021 --test node/build.rs (7 tests)",
+      "cargo test --locked --release -p sc-consensus-qpow kraskus_dev_fee (4 tests)"
+    ],
+    "notice": "node/licenses/KRASKUS-MODIFICATIONS.md",
+    "approved": "owner 2026-10-10 (Option N; version suffix Option A)"
+  },
+  "dev_fee": {
+    "percent": 1,
+    "period": 100,
+    "schedule": "height % 100 == 0",
+    "mechanism": "block_height_schedule",
+    "dev_address": "qznGon1R4fxX4evYDRQExsf2LtqA9Cxr5NZnGC8fxsTBFmwEQ",
+    "dev_inner_hash": "0x15a25c68c70180147fbd6c6e77c657506b61322bd3f5985145c33e72c1ba8a59",
+    "single_python_source": "quantus_common/devfee.py (tests assert this lock and the patch carry the same values)"
+  },
+  "version": {
+    "substrate_cli_git_commit_hash": "482c5b9e02b-kraskus-devfee1",
+    "version_string": "quantus-node 1.0.2-Qm-482c5b9e02b-kraskus-devfee1",
+    "marker": "kraskus-devfee1"
+  },
+  "build_command": "cargo build --locked --release --package quantus-node --target x86_64-unknown-linux-gnu (prebuilt path: cargo build --offline --locked ...)",
+  "build_recipes": {
+    "in_docker": "node/Dockerfile (fetch + verify commit, apply patch, Kraskus tests, cargo build, runtime stage)",
+    "prebuilt": "node/build-devfee-binary.sh (docker run of the builder, source + target on D:, cargo --offline) then node/Dockerfile.prebuilt (sha256-verified COPY; runtime stage byte-identical to node/Dockerfile)",
+    "build_sh": "build.sh --only node --node-prebuilt <dir> | build.sh --only node-source"
+  },
+  "base_images": {
+    "builder": "rust:1.93.0-bookworm@sha256:d0a4aa3ca2e1088ac0c81690914a0d810f2eee188197034edf366ed010a2b382",
+    "runtime": "python:3.13-slim@sha256:7c61056e61ac89e852de05f3dc6fa51a6dd2181797bceed46aa725dd7cb2cd3b"
+  },
+  "builder_apt_packages": [
+    "clang",
+    "libclang-dev",
+    "protobuf-compiler",
+    "git",
+    "ca-certificates"
+  ],
+  "not_yet_pinned": [
+    "builder apt package versions are recorded in build-info.txt (clang 14.0.6, protoc 3.21.12, gcc 12.2.0) but not pinned in the Dockerfile"
+  ],
+  "devfee_build": {
+    "status": "built 2026-10-11: binary + node image (local, not pushed)",
+    "date": "2026-10-11T05:18Z",
+    "builder_host": "Kraskus workstation (Windows 11, Docker Desktop 29.7.2, WSL2 VM 8 GB)",
+    "build_mode": "docker run of rust:1.93.0-bookworm@sha256:d0a4aa3ca2e1088ac0c81690914a0d810f2eee188197034edf366ed010a2b382; source = mirror archives (chain f6d385ff..., vendor ade776f6...) + 0001-kraskus-dev-fee.patch, in docker volume (CHAIN_VOLUME); cargo target bind-mounted on D:; cargo --offline --locked; CARGO_BUILD_JOBS=2, --memory 4500m; SUBSTRATE_CLI_GIT_COMMIT_HASH=482c5b9e02b-kraskus-devfee1 (node/build-devfee-binary.sh)",
+    "toolchain": {
+      "rustc": "1.93.0 (254b59607 2026-01-19), LLVM 21.1.8",
+      "cargo": "1.93.0 (083ac5135 2025-12-15)",
+      "clang": "Debian clang 14.0.6",
+      "protoc": "libprotoc 3.21.12",
+      "gcc": "Debian 12.2.0-14+deb12u1",
+      "libclang_path": "/usr/lib/llvm-14/lib"
+    },
+    "binary": {
+      "path": "/usr/local/bin/quantus-node",
+      "version": "quantus-node 1.0.2-Qm-482c5b9e02b-kraskus-devfee1",
+      "sha256": "24e28fd8e84b3e3b5bdd33d63bc61e6ab0b703275d5283bbf6389fadfd2859a3",
+      "size_bytes": 79958040
+    },
+    "image": {
+      "tag": "kraskus-dev/quantus-solo-node:0.3.0",
+      "image_id": "sha256:4d0706016b544f511e3d37eb05a09042625d885297dc52ba8b6d5152a6f3f5cd",
+      "registry_digest": null,
+      "built_from": "node/Dockerfile.prebuilt via build.sh --only node --node-prebuilt (git archive of 10630bb)"
+    },
+    "verification": "in-build tests: node/build.rs sanitizer 7/7 (rustc --test), sc-consensus-qpow kraskus_dev_fee 4/4; version string exact; binary sha256 recomputed on host = build record; in-image /usr/local/bin/quantus-node sha256 = recorded binary sha256 (checked by build.sh self-report and independently)"
+  },
+  "reference_upstream_binary_for_comparison_only": {
+    "asset": "quantus-node-v1.0.2-Qm-x86_64-unknown-linux-gnu.tar.gz",
+    "sha256": "c0fb354772f4637c6db3a5e701ae8c4a6fc44c5414a38f1a95b91bc13b1e9063",
+    "note": "Unsigned; used only to compare --version and build-spec output with the Kraskus build. Never shipped."
+  },
+  "previous_build_0_1_0": {
+    "date": "2026-10-02",
+    "builder_host": "workstation Docker engine (WSL2 VM 8 vCPU/7.9 GB), legacy builder limits --memory 6g --memory-swap 9g --cpuset-cpus 0-5, CARGO_BUILD_JOBS=4",
+    "attempts": [
+      {
+        "started": "2026-10-02T21:27:20Z",
+        "result": "failed: clang-sys could not find libclang.so (fixed by LIBCLANG_PATH, commit 2e3a893)"
+      },
+      {
+        "started": "2026-10-02T21:36:03Z",
+        "finished": "2026-10-02T22:07:30Z",
+        "result": "success",
+        "duration_minutes": 31
+      }
+    ],
+    "dockerfile_revision": "2e3a89351f97f00df09c2a5f1b17b722da4b15b9",
+    "source_commit": "482c5b9e02bec0adc70797eade0a67f60baf2619",
+    "toolchain": {
+      "rustc": "1.93.0 (254b59607 2026-01-19), LLVM 21.1.8",
+      "cargo": "1.93.0 (083ac5135 2025-12-15)",
+      "clang": "Debian clang 14.0.6",
+      "protoc": "libprotoc 3.21.12",
+      "gcc": "Debian 12.2.0-14+deb12u1",
+      "libclang_path": "/usr/lib/llvm-14/lib"
+    },
+    "binary": {
+      "path": "/usr/local/bin/quantus-node",
+      "version": "quantus-node 1.0.2-Qm-482c5b9e02b",
+      "sha256": "e40fdcf0613afa5b712c2a6f2a3d329be1ca15fbfc446f3f4080b5c9ca99fefd"
+    },
+    "image": {
+      "tag": "kraskus-dev/quantus-solo-node:0.1.0",
+      "image_id": "sha256:048b30d951501c8d65cc439f45e40d2166f44c58e4dcd21158f427470f31d888",
+      "size_bytes": 71960983,
+      "registry_digest": null,
+      "note": "local only; a registry digest exists only after push, which is not authorized yet"
+    },
+    "verification": "scripts/verify-node-image.sh: 11/11 PASS (node/build-evidence/verify-2026-10-02.txt); mainnet raw chain spec sha256 da13fff3998edec5c31782c6b8915a989c825b0b21f55ee9214324e0dba6b46e identical to the upstream release binary's",
+    "differs_from_upstream_binary": "yes (expected: non-reproducible build); upstream release sha256 of the tarball c0fb3547...9063, extracted binary 7df6ccd8...9778; behaviour checked by version, chain spec and a live mainnet sync",
+    "known_issue": "Image built without WORKDIR: entrypoint 'python -m kraskus_foundation.service_init' needs /app as working dir. The 0.1.0 package sets working_dir: /app (compose) so this accepted artifact stays unchanged; node/Dockerfile sets WORKDIR /app from the next build on. Found by the 2026-10-02 package smoke test.",
+    "note": "Unmodified upstream build of Quantus Solo 0.1.0 (Kraskus-Crypto-Apps 2e3a893), recorded here as history; still the node image of the 0.3.0 package until the dev-fee image is built. Imported from Kraskus-Crypto-Apps 170e3b3 node/build-inputs.lock first_build."
+  }
+}

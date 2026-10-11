@@ -1,0 +1,268 @@
+Kraskus Quantus Solo: 1% developer fee (Option N, owner-approved 2026-10-10).
+Modified by Kraskus Crypto, 2026-10-10. Base: Quantus-Network/chain 482c5b9e02bec0adc70797eade0a67f60baf2619 (v1.0.2-Qm).
+Files: client/consensus/qpow/src/lib.rs (block-template reward identity selection),
+       node/build.rs (version override also accepts <hex>-kraskus-devfee<digits>).
+Apply from the source root: git apply --check 0001-kraskus-dev-fee.patch && git apply 0001-kraskus-dev-fee.patch
+See KRASKUS-MODIFICATIONS.md.
+
+diff --git a/client/consensus/qpow/src/lib.rs b/client/consensus/qpow/src/lib.rs
+index d292f6a..c21eae8 100644
+--- a/client/consensus/qpow/src/lib.rs
++++ b/client/consensus/qpow/src/lib.rs
+@@ -38,6 +38,42 @@ use sp_runtime::{
+ 
+ const LOG_TARGET: &str = "pow";
+ 
++// ---------------------------------------------------------------------------
++// Kraskus modification (Kraskus Crypto, 2026-10-10): Kraskus Quantus Solo 1%
++// developer fee. Modified work notice (GPL-3.0 section 5(a); Apache-2.0
++// section 4(b)): see KRASKUS-MODIFICATIONS.md in the Kraskus source release.
++//
++// One block height in every KRASKUS_DEV_FEE_PERIOD (height % 100 == 0) is
++// built with the pinned Kraskus developer reward inner hash; every other
++// height uses the operator's --rewards-inner-hash. Only the reward identity of
++// templates THIS node builds is selected here. Consensus, block import and
++// verification, reward amounts, difficulty, P2P and the external miner
++// protocol (QUIC transport, auth token, TLS) are unchanged, and blocks built
++// by other nodes are unaffected.
++// ---------------------------------------------------------------------------
++
++/// Every `KRASKUS_DEV_FEE_PERIOD`-th block height pays the developer identity (1%).
++pub const KRASKUS_DEV_FEE_PERIOD: u64 = 100;
++
++/// Inner hash (32-byte Poseidon digest) of the Kraskus Quantus developer reward
++/// identity. Public value; its wormhole address is
++/// qznGon1R4fxX4evYDRQExsf2LtqA9Cxr5NZnGC8fxsTBFmwEQ.
++pub const KRASKUS_DEV_FEE_INNER_HASH: [u8; 32] = [
++	0x15, 0xa2, 0x5c, 0x68, 0xc7, 0x01, 0x80, 0x14, 0x7f, 0xbd, 0x6c, 0x6e, 0x77, 0xc6, 0x57, 0x50,
++	0x6b, 0x61, 0x32, 0x2b, 0xd3, 0xf5, 0x98, 0x51, 0x45, 0xc3, 0x3e, 0x72, 0xc1, 0xba, 0x8a, 0x59,
++];
++
++/// Reward preimage for a template at `height` (Kraskus modification): the
++/// developer inner hash when `height % KRASKUS_DEV_FEE_PERIOD == 0`, otherwise
++/// the operator's preimage, unchanged.
++pub fn kraskus_rewards_preimage_for_height(user: [u8; 32], height: u64) -> [u8; 32] {
++	if height % KRASKUS_DEV_FEE_PERIOD == 0 {
++		KRASKUS_DEV_FEE_INNER_HASH
++	} else {
++		user
++	}
++}
++
+ #[derive(Debug, thiserror::Error)]
+ pub enum Error<B: BlockT> {
+ 	#[error("Header uses the wrong engine {0:?}")]
+@@ -686,6 +722,14 @@ where
+ 		},
+ 	};
+ 
++	// Kraskus modification: choose the reward identity for the height being built.
++	let parent_number: u64 = (*best_header.number()).try_into().unwrap_or(u64::MAX);
++	let template_height = parent_number.saturating_add(1);
++	let rewards_preimage = kraskus_rewards_preimage_for_height(rewards_preimage, template_height);
++	if template_height % KRASKUS_DEV_FEE_PERIOD == 0 {
++		info!(target: LOG_TARGET, "Kraskus dev-fee template selected for height {}", template_height);
++	}
++
+ 	let difficulty = match qpow_get_difficulty::<Block, C>(client, best_hash) {
+ 		Ok(d) => d,
+ 		Err(e) => {
+@@ -1040,4 +1084,46 @@ mod tests {
+ 			.expect("a wrong-length seal must be rejected");
+ 		assert!(err.contains("64 bytes"), "expected the length rejection, got: {err}");
+ 	}
++
++	// Kraskus modification (2026-10-10): developer fee selection rule.
++	#[test]
++	fn kraskus_dev_fee_user_heights_keep_the_user_preimage() {
++		let user = [7u8; 32];
++		for h in [1u64, 99, 101, 199, 201] {
++			assert_eq!(kraskus_rewards_preimage_for_height(user, h), user, "height {h}");
++		}
++	}
++
++	#[test]
++	fn kraskus_dev_fee_every_hundredth_height_pays_the_developer() {
++		let user = [7u8; 32];
++		for h in [100u64, 200, 1_000, 202_300] {
++			assert_eq!(
++				kraskus_rewards_preimage_for_height(user, h),
++				KRASKUS_DEV_FEE_INNER_HASH,
++				"height {h}"
++			);
++		}
++	}
++
++	#[test]
++	fn kraskus_dev_fee_user_bytes_pass_through_unchanged() {
++		let mut user = [0u8; 32];
++		for (i, b) in user.iter_mut().enumerate() {
++			*b = i as u8;
++		}
++		assert_eq!(kraskus_rewards_preimage_for_height(user, 12_345), user);
++		assert_ne!(user, KRASKUS_DEV_FEE_INNER_HASH);
++	}
++
++	#[test]
++	fn kraskus_dev_fee_inner_hash_is_the_pinned_value() {
++		const EXPECTED: &str = "15a25c68c70180147fbd6c6e77c657506b61322bd3f5985145c33e72c1ba8a59";
++		assert_eq!(KRASKUS_DEV_FEE_PERIOD, 100);
++		let mut expected = [0u8; 32];
++		for (i, b) in expected.iter_mut().enumerate() {
++			*b = u8::from_str_radix(&EXPECTED[2 * i..2 * i + 2], 16).unwrap();
++		}
++		assert_eq!(KRASKUS_DEV_FEE_INNER_HASH, expected);
++	}
+ }
+diff --git a/node/build.rs b/node/build.rs
+index 4755ebb..da9d479 100644
+--- a/node/build.rs
++++ b/node/build.rs
+@@ -1,5 +1,14 @@
++// Kraskus modification (Kraskus Crypto, 2026-10-10): the commit-hash override
++// below also accepts `<hex>-kraskus-devfee<digits>`, so a Kraskus Quantus Solo
++// build reports e.g. `1.0.2-Qm-482c5b9e02b-kraskus-devfee1` as its version.
++// `main` and the import are compiled out under `rustc --test`, so the pure
++// validation function and its tests run without the build-script crate.
++// Modified work notice (GPL-3.0 section 5(a)): see KRASKUS-MODIFICATIONS.md in
++// the Kraskus source release.
++#[cfg(not(test))]
+ use substrate_build_script_utils::{generate_cargo_keys, rerun_if_git_head_changed};
+ 
++#[cfg(not(test))]
+ fn main() {
+ 	sanitize_git_commit_hash_override();
+ 
+@@ -26,16 +35,126 @@ fn main() {
+ /// empty value is also inert and kept as-is (upstream then omits the commit
+ /// suffix entirely). Anything else is replaced with `unknown`, matching the
+ /// helper's own fallback when no hash is available.
++///
++/// Kraskus modification: one extra shape is allowed, see
++/// `is_permitted_commit_hash_override`.
++#[cfg_attr(test, allow(dead_code))]
+ fn sanitize_git_commit_hash_override() {
+ 	const VAR: &str = "SUBSTRATE_CLI_GIT_COMMIT_HASH";
+-	// Longest accepted value: a full SHA-256 Git object name.
+-	const MAX_LEN: usize = 64;
+ 
+ 	let Ok(hash) = std::env::var(VAR) else { return };
+-	let hash = hash.trim();
+-	let is_hex = hash.len() <= MAX_LEN && hash.bytes().all(|b| b.is_ascii_hexdigit());
+-	if !is_hex {
+-		println!("cargo:warning={VAR} is not a hex Git commit hash; using 'unknown'");
++	if !is_permitted_commit_hash_override(hash.trim()) {
++		println!(
++			"cargo:warning={VAR} is not a hex Git commit hash (or <hex>-kraskus-devfee<digits>); using 'unknown'"
++		);
+ 		std::env::set_var(VAR, "unknown");
+ 	}
+ }
++
++/// The (already trimmed) override values that may reach `generate_cargo_keys()`:
++/// - upstream, unchanged: 0..=64 ASCII hex digits (empty stays inert);
++/// - Kraskus: 1..=64 ASCII hex digits, the literal `-kraskus-devfee`, then one
++///   or more ASCII digits, and nothing else.
++///
++/// Both shapes are ASCII alphanumerics plus fixed hyphens, so no newline,
++/// space, quote or other character can reach a `cargo:` directive.
++fn is_permitted_commit_hash_override(hash: &str) -> bool {
++	// Longest accepted hex part: a full SHA-256 Git object name.
++	const MAX_LEN: usize = 64;
++	const KRASKUS_DEV_FEE_SUFFIX: &str = "-kraskus-devfee";
++
++	let is_hex = |s: &str| s.len() <= MAX_LEN && s.bytes().all(|b| b.is_ascii_hexdigit());
++	if is_hex(hash) {
++		return true;
++	}
++	match hash.split_once(KRASKUS_DEV_FEE_SUFFIX) {
++		Some((hex, digits)) =>
++			!hex.is_empty() &&
++				is_hex(hex) && !digits.is_empty() &&
++				digits.bytes().all(|b| b.is_ascii_digit()),
++		None => false,
++	}
++}
++
++#[cfg(test)]
++mod kraskus_tests {
++	use super::is_permitted_commit_hash_override as permitted;
++
++	const COMMIT: &str = "482c5b9e02b";
++
++	#[test]
++	fn upstream_hex_values_are_accepted_unchanged() {
++		assert!(permitted(COMMIT));
++		assert!(permitted("482c5b9e02bec0adc70797eade0a67f60baf2619"));
++		assert!(permitted("ABCDEF0123"));
++		assert!(permitted(&"a".repeat(64)));
++		assert!(!permitted(&"a".repeat(65)));
++	}
++
++	#[test]
++	fn empty_is_inert_as_upstream() {
++		// Upstream keeps an empty override as-is (the version then has no commit suffix).
++		assert!(permitted(""));
++		assert!(!permitted(" "));
++	}
++
++	#[test]
++	fn kraskus_devfee_suffix_is_accepted() {
++		assert!(permitted("482c5b9e02b-kraskus-devfee1"));
++		assert!(permitted("482c5b9e02b-kraskus-devfee2"));
++		assert!(permitted("482c5b9e02b-kraskus-devfee10"));
++		assert!(permitted(&format!("{}-kraskus-devfee1", "f".repeat(64))));
++	}
++
++	#[test]
++	fn spaces_are_rejected() {
++		for v in ["482c5b9e02b -kraskus-devfee1", "482c5b9e02b-kraskus-devfee1 x", "482c 5b9e", "482c5b9e02b-kraskus-devfee 1"]
++		{
++			assert!(!permitted(v), "{v:?}");
++		}
++	}
++
++	#[test]
++	fn semicolons_are_rejected() {
++		for v in ["482c5b9e02b;", "482c5b9e02b;ls", "482c5b9e02b-kraskus-devfee1;", "482c5b9e02b-kraskus-devfee;1"] {
++			assert!(!permitted(v), "{v:?}");
++		}
++	}
++
++	#[test]
++	fn shell_metacharacters_and_newlines_are_rejected() {
++		for c in ["$", "`", "|", "&", "\n", "\r", "\"", "'", "(", ")", "<", ">", "\\", "*", "?", "!", "#", "{", "}"] {
++			for v in [
++				format!("{COMMIT}{c}"),
++				format!("{COMMIT}-kraskus-devfee1{c}"),
++				format!("{COMMIT}{c}-kraskus-devfee1"),
++				format!("{COMMIT}-kraskus-devfee{c}1"),
++				format!("{COMMIT}\ncargo:rustc-cfg=evil"),
++			] {
++				assert!(!permitted(&v), "{v:?}");
++			}
++		}
++	}
++
++	#[test]
++	fn other_suffixes_are_rejected() {
++		for v in [
++			"482c5b9e02b-foo",
++			"482c5b9e02b-kraskus-devfeeX",
++			"482c5b9e02b-kraskus-devfee",
++			"482c5b9e02b-kraskus-devfee1x",
++			"482c5b9e02b-kraskus-devfee-1",
++			"482c5b9e02b-kraskus-devfee+1",
++			"482c5b9e02b-kraskus-devfee1-kraskus-devfee2",
++			"482c5b9e02b-KRASKUS-DEVFEE1",
++			"482c5b9e02b_kraskus_devfee1",
++			"-kraskus-devfee1",
++			"kraskus-devfee1",
++			"g82c5b9e02b-kraskus-devfee1",
++			"unknown",
++		] {
++			assert!(!permitted(v), "{v:?}");
++		}
++		assert!(!permitted(&format!("{}-kraskus-devfee1", "a".repeat(65))));
++	}
++}

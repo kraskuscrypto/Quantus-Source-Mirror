@@ -5,7 +5,7 @@ distributes inside its **Quantus Solo** app images:
 
 | Program | Upstream | Shipped in |
 |---|---|---|
-| `quantus-node` | https://github.com/Quantus-Network/chain | node image (built by Kraskus from unmodified upstream source) |
+| `quantus-node` | https://github.com/Quantus-Network/chain | node image (built by Kraskus: 0.1.0 from unmodified upstream source; from 0.3.0 with the disclosed Kraskus developer-fee patch) |
 | `quantus-miner` | https://github.com/Quantus-Network/quantus-miner | miner image (unmodified upstream release binary; source mirrored for completeness) |
 
 Each Quantus Solo release has an immutable tag `quantus-solo-v<version>` and a
@@ -19,6 +19,8 @@ directory `releases/quantus-solo-<version>/` holds:
 - `build/`: the Kraskus build recipe that produced the distributed binary;
 - `LICENSES/` and `INVENTORY/`: licence texts, third-party notices and licence inventories;
 - `SHA256SUMS`, with a detached OpenPGP signature `SHA256SUMS.asc`.
+
+**From 0.3.0** Kraskus Quantus Solo uses the official Quantus node source as its base. Kraskus applies a disclosed developer-fee modification to block-template reward selection. The miner remains unmodified. Kraskus Quantus Solo includes a 1% developer fee. One out of every 100 block heights is assigned to the Kraskus developer reward identity; all other heights use your configured reward identity. Because solo mining rewards depend on when blocks are actually found, your realized fee percentage over a short period may differ from 1%. The release directory then also holds the patch (`0001-kraskus-dev-fee.patch`) and the notice of modification (`KRASKUS-MODIFICATIONS.md`); the upstream source and vendor archives are the same, unchanged files.
 
 See [RELEASES.md](RELEASES.md) for the release index. Verify with:
 

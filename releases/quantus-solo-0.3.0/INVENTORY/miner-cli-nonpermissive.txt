@@ -1,0 +1,9 @@
+engine-cpu	4.2.0	None	workspace/path: crates/engine-cpu	license_file=None	proc_macro=False	workspace=True
+engine-cuda	4.2.0	None	workspace/path: crates/engine-cuda	license_file=None	proc_macro=False	workspace=True
+engine-gpu	4.2.0	None	workspace/path: crates/engine-gpu	license_file=None	proc_macro=False	workspace=True
+metrics	4.2.0	None	workspace/path: crates/metrics	license_file=None	proc_macro=False	workspace=True
+miner-cli	4.2.0	None	workspace/path: crates/miner-cli	license_file=None	proc_macro=False	workspace=True
+miner-service	4.2.0	None	workspace/path: crates/miner-service	license_file=None	proc_macro=False	workspace=True
+qpow-math	0.1.0	None	git+https://github.com/Quantus-Network/chain.git?tag=v0.7.1-q-day-2#5ea94cb1e5347b12d091b6fa9f9234ceb897ec42	license_file=None	proc_macro=False	workspace=False
+quic-transport	4.2.0	None	workspace/path: crates/quic-transport	license_file=None	proc_macro=False	workspace=True
+ring	0.16.20	None	registry+https://github.com/rust-lang/crates.io-index	license_file=LICENSE	proc_macro=False	workspace=False

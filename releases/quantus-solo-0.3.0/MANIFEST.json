@@ -1,0 +1,115 @@
+{
+  "schema": 2,
+  "app": {
+    "id": "kraskus-quantus-solo",
+    "version": "0.3.0",
+    "repository": "https://github.com/kraskuscrypto/Kraskus-Mining-Platform",
+    "path": "apps/quantus-solo",
+    "commit": "d954f2d6f50f938f78ef2888ab735731d5a003b2"
+  },
+  "dev_fee": {
+    "percent": 1,
+    "schedule": "height % 100 == 0",
+    "mechanism": "block_height_schedule",
+    "dev_address": "qznGon1R4fxX4evYDRQExsf2LtqA9Cxr5NZnGC8fxsTBFmwEQ",
+    "dev_inner_hash": "0x15a25c68c70180147fbd6c6e77c657506b61322bd3f5985145c33e72c1ba8a59",
+    "disclosure": "Kraskus Quantus Solo includes a 1% developer fee. One out of every 100 block heights is assigned to the Kraskus developer reward identity; all other heights use your configured reward identity. Because solo mining rewards depend on when blocks are actually found, your realized fee percentage over a short period may differ from 1%."
+  },
+  "source_to_binary": [
+    {
+      "component": "quantus-node",
+      "binary_path": "/usr/local/bin/quantus-node",
+      "origin": "kraskus-modified-source-build",
+      "shipped_in": [
+        "node"
+      ],
+      "source_asset": "quantus-chain-v1.0.2-Qm-482c5b9e-source.tar.gz",
+      "vendor_asset": "quantus-chain-v1.0.2-Qm-482c5b9e-cargo-vendor.tar.gz",
+      "repository": "https://github.com/Quantus-Network/chain",
+      "tag": "v1.0.2-Qm",
+      "commit": "482c5b9e02bec0adc70797eade0a67f60baf2619",
+      "kraskus_patch": {
+        "file": "0001-kraskus-dev-fee.patch",
+        "sha256": "82cc16c192a92e895c1480afda15e645d8b29898a7d4d5443ff32fdaf1a68b8a",
+        "files_changed": [
+          "client/consensus/qpow/src/lib.rs",
+          "node/build.rs"
+        ],
+        "notice": "KRASKUS-MODIFICATIONS.md",
+        "date": "2026-10-10"
+      },
+      "substrate_cli_git_commit_hash": "482c5b9e02b-kraskus-devfee1",
+      "version": "quantus-node 1.0.2-Qm-482c5b9e02b-kraskus-devfee1",
+      "build_command": "cargo build --offline --locked --release --package quantus-node --target x86_64-unknown-linux-gnu",
+      "builder_image": "rust:1.93.0-bookworm@sha256:d0a4aa3ca2e1088ac0c81690914a0d810f2eee188197034edf366ed010a2b382",
+      "toolchain": {
+        "rustc": "1.93.0 (254b59607 2026-01-19), LLVM 21.1.8",
+        "cargo": "1.93.0 (083ac5135 2025-12-15)",
+        "clang": "Debian clang 14.0.6",
+        "protoc": "libprotoc 3.21.12",
+        "gcc": "Debian 12.2.0-14+deb12u1",
+        "libclang_path": "/usr/lib/llvm-14/lib"
+      },
+      "binary_sha256": "24e28fd8e84b3e3b5bdd33d63bc61e6ab0b703275d5283bbf6389fadfd2859a3",
+      "build_recipe": "build/node/build-devfee-binary.sh + build/node/Dockerfile.prebuilt (equivalent: build/node/Dockerfile)",
+      "build_recipe_revision": "d954f2d6f50f938f78ef2888ab735731d5a003b2",
+      "build_mode": "docker run of rust:1.93.0-bookworm@sha256:d0a4aa3ca2e1088ac0c81690914a0d810f2eee188197034edf366ed010a2b382; source = mirror archives (chain f6d385ff..., vendor ade776f6...) + 0001-kraskus-dev-fee.patch, in docker volume (CHAIN_VOLUME); cargo target bind-mounted on D:; cargo --offline --locked; CARGO_BUILD_JOBS=2, --memory 4500m; SUBSTRATE_CLI_GIT_COMMIT_HASH=482c5b9e02b-kraskus-devfee1 (node/build-devfee-binary.sh)"
+    },
+    {
+      "component": "quantus-miner",
+      "binary_path": "/usr/local/bin/quantus-miner",
+      "origin": "upstream-release-binary",
+      "shipped_in": [
+        "miner"
+      ],
+      "source_asset": "quantus-miner-v4.2.0-c1cf0a37-source.tar.gz",
+      "vendor_asset": "quantus-miner-v4.2.0-c1cf0a37-cargo-vendor.tar.gz",
+      "repository": "https://github.com/Quantus-Network/quantus-miner",
+      "tag": "v4.2.0",
+      "commit": "c1cf0a37dce77f98df3c73c390f958d7efddaf85",
+      "binary_sha256": "a929e11ee1fd4fe291d743f373041bc280620376f5084620db3b0f82d9a2a276",
+      "upstream_asset": "quantus-miner-linux-x86_64 (unmodified, unsigned upstream release asset)"
+    }
+  ],
+  "images": {
+    "node": {
+      "local_image_id": "sha256:4d0706016b544f511e3d37eb05a09042625d885297dc52ba8b6d5152a6f3f5cd",
+      "registry_digest": null
+    },
+    "miner": {
+      "local_image_id": "sha256:e378ecd0deead1cc3f96097a7c49461e9e6be2f491193260adab4d91ed199988",
+      "registry_digest": "ghcr.io/kraskuscrypto/kraskus-quantus-solo-miner@sha256:e378ecd0deead1cc3f96097a7c49461e9e6be2f491193260adab4d91ed199988"
+    }
+  },
+  "signing": {
+    "scheme": "openpgp-detached-armored",
+    "signed_file": "SHA256SUMS",
+    "signature_file": "SHA256SUMS.asc",
+    "public_key_fingerprint": "78A44DE8F12BE5F68FDAA493C5AF5FF3489EDF25",
+    "public_key_file": "KRASKUS-RELEASE-SIGNING-KEY.asc (repository root)"
+  },
+  "release_assets": {
+    "quantus-chain-v1.0.2-Qm-482c5b9e-cargo-vendor.tar.gz": {
+      "sha256": "ade776f62a32fbe0e95a1d97588b4cbc7f447f23ae3937d6ec49f1eeb79769fb",
+      "size": 160984084
+    },
+    "quantus-chain-v1.0.2-Qm-482c5b9e-source.tar.gz": {
+      "sha256": "f6d385ffcb3cb696588ddc778b8844d6b1fd8046331b38de2871f935385c4415",
+      "size": 13182761
+    },
+    "quantus-miner-v4.2.0-c1cf0a37-cargo-vendor.tar.gz": {
+      "sha256": "f8bc60b645c05ef27144671271a2dadf7f72d766b7962c268c2bf0c90c332ced",
+      "size": 76467840
+    },
+    "quantus-miner-v4.2.0-c1cf0a37-source.tar.gz": {
+      "sha256": "233d5e864b8083772cfbc23a8e79d5948226518d56cf44e6f8611973f3e0ff1b",
+      "size": 201104
+    }
+  },
+  "release_assets_reused_from": "quantus-solo-v0.1.0 (byte-identical)",
+  "git_tag": "quantus-solo-v0.3.0",
+  "status": "STAGED, NOT PUBLISHED, NOT SIGNED",
+  "tbd": [
+    "images.node.registry_digest"
+  ]
+}

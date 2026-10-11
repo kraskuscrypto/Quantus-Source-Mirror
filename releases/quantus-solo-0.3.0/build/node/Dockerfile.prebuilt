@@ -1,0 +1,90 @@
+# syntax=docker/dockerfile:1
+# Kraskus Quantus Solo node image FROM A PREBUILT, SHA-VERIFIED BINARY.
+#
+# Same image as node/Dockerfile (the runtime stage below is byte-identical;
+# tests/test_node_recipe.py asserts it), but the quantus-node binary is not
+# compiled inside `docker build`. It is built by node/build-devfee-binary.sh in
+# a `docker run` of the same pinned rust:1.93.0-bookworm builder, with the
+# source and the cargo target bind-mounted on D: (owner decision 2026-10-10:
+# C: has too little space for an in-Docker build), from:
+#   the pinned upstream source (Quantus-Network/chain 482c5b9e, mirror archive)
+#   + its cargo vendor archive (offline)
+#   + node/patches/0001-kraskus-dev-fee.patch
+#   + SUBSTRATE_CLI_GIT_COMMIT_HASH=482c5b9e02b-kraskus-devfee1
+#   -> cargo build --offline --locked --release --package quantus-node --target x86_64-unknown-linux-gnu
+#
+# The script's output directory is copied into the build context as
+# node/prebuilt/ (build.sh --only node --node-prebuilt <dir>; never committed):
+#   quantus-node, build-info.txt, licenses/quantus-chain-LICENSE,
+#   licenses/qp-dilithium-crypto-LICENSE
+# NODE_BINARY_SHA256 is required and must equal
+# build-inputs.lock devfee_build.binary.sha256 (build.sh passes that value and
+# refuses a TBD placeholder). The binary must report exactly
+# `quantus-node 1.0.2-Qm-482c5b9e02b-kraskus-devfee1`.
+ARG APP_VERSION
+ARG SOURCE_REVISION=unknown
+ARG QUANTUS_CHAIN_COMMIT=482c5b9e02bec0adc70797eade0a67f60baf2619
+ARG QUANTUS_CHAIN_TAG=v1.0.2-Qm
+
+# Verify stage: the runtime base image (it has sha256sum and runs the binary).
+FROM python:3.13-slim@sha256:7c61056e61ac89e852de05f3dc6fa51a6dd2181797bceed46aa725dd7cb2cd3b AS build
+ARG NODE_BINARY_SHA256
+COPY node/prebuilt/ /prebuilt/
+RUN test -n "$NODE_BINARY_SHA256" || (echo "NODE_BINARY_SHA256 build-arg is required (build-inputs.lock)" && exit 1)  && echo "${NODE_BINARY_SHA256}  /prebuilt/quantus-node" | sha256sum -c -  && install -D -m 0755 /prebuilt/quantus-node /out/quantus-node  && sha256sum /out/quantus-node > /out/quantus-node.sha256  && /out/quantus-node --version > /out/quantus-node.version  && grep -qx "quantus-node 1.0.2-Qm-482c5b9e02b-kraskus-devfee1" /out/quantus-node.version  && grep -qx "substrate_cli_git_commit_hash=482c5b9e02b-kraskus-devfee1" /prebuilt/build-info.txt  && cp /prebuilt/build-info.txt /out/build-info.txt  && mkdir -p /out/licenses  && cp /prebuilt/licenses/quantus-chain-LICENSE /prebuilt/licenses/qp-dilithium-crypto-LICENSE /out/licenses/
+
+# ---- runtime stage: byte-identical in node/Dockerfile and node/Dockerfile.prebuilt ----
+# Runtime: the same pinned python base as the hardened baseline's services
+# (Debian 13 "trixie"; the bookworm-built binary runs on its newer glibc; ca-certificates included -- the miner server needs the
+# system CA store, Phase 1 finding). Python runs the supervisor.
+FROM python:3.13-slim@sha256:7c61056e61ac89e852de05f3dc6fa51a6dd2181797bceed46aa725dd7cb2cd3b
+ARG APP_VERSION
+ARG SOURCE_REVISION
+ARG QUANTUS_CHAIN_COMMIT
+ARG QUANTUS_CHAIN_TAG
+RUN test -n "$APP_VERSION" || (echo "APP_VERSION build-arg is required" && exit 1)
+LABEL org.opencontainers.image.title="Kraskus Quantus Solo node" \
+      org.opencontainers.image.version="${APP_VERSION}" \
+      org.opencontainers.image.revision="${SOURCE_REVISION}" \
+      org.opencontainers.image.source="https://github.com/kraskuscrypto/Kraskus-Mining-Platform" \
+      org.opencontainers.image.vendor="Kraskus Crypto" \
+      io.kraskus.app="kraskus-quantus-solo" \
+      io.kraskus.component="node" \
+      io.kraskus.upstream.repository="https://github.com/Quantus-Network/chain" \
+      io.kraskus.upstream.tag="${QUANTUS_CHAIN_TAG}" \
+      io.kraskus.upstream.commit="${QUANTUS_CHAIN_COMMIT}" \
+      io.kraskus.modification="0001-kraskus-dev-fee.patch: 1% developer fee (height % 100 == 0); see /usr/share/doc/quantus-node/KRASKUS-MODIFICATIONS.md" \
+      io.kraskus.license.notice="quantus-node is a GPL-3.0 combined work, modified by Kraskus Crypto; corresponding source: see /usr/share/doc/quantus-node/SOURCE.md"
+
+COPY --from=build /out/quantus-node /usr/local/bin/quantus-node
+COPY --from=build /out/quantus-node.sha256 /out/quantus-node.version /out/build-info.txt /usr/share/doc/quantus-node/
+COPY --from=build /out/licenses/ /usr/share/doc/quantus-node/licenses/
+COPY node/licenses/ /usr/share/doc/quantus-node/
+COPY node/patches/ /usr/share/doc/quantus-node/patches/
+COPY node/supervisor.py /app/supervisor.py
+COPY quantus_common/ /app/quantus_common/
+COPY kraskus_foundation/ /app/kraskus_foundation/
+# v3 layout: there is no app-root version.py (the adapter's is
+# kraskus_solo/version.py) and nothing in this image imports one; the version
+# is KRASKUS_APP_VERSION below plus /app/VERSION.
+COPY VERSION /app/
+WORKDIR /app
+RUN rm -rf /app/kraskus_foundation/tests \
+ && groupadd --system --gid 10001 kraskus \
+ && useradd --system --uid 10001 --gid 10001 --home-dir /nonexistent --shell /usr/sbin/nologin kraskus
+
+ENV KRASKUS_APP_VERSION=${APP_VERSION} \
+    QUANTUS_CONFIG_DIR=/data/config \
+    QUANTUS_RUNTIME_DIR=/data/runtime \
+    QUANTUS_CREDS_DIR=/data/miner-creds \
+    QUANTUS_BASE_PATH=/data/node \
+    PYTHONUNBUFFERED=1
+
+EXPOSE 30333/tcp 9833/udp
+
+# Init step (root): private dirs, hand the data trees to uid 10001, then the
+# supervisor runs unprivileged and owns the quantus-node process.
+ENTRYPOINT ["python", "-m", "kraskus_foundation.service_init", \
+            "--data", "/data/node", "--data", "/data/runtime", "--data", "/data/miner-creds", \
+            "--private", "/data/node:0o700", "--private", "/data/runtime:0o750", "--private", "/data/miner-creds:0o750", \
+            "--uid", "10001", "--gid", "10001", "--"]
+CMD ["python", "/app/supervisor.py"]
